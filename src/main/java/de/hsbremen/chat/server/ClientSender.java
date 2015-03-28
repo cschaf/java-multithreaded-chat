@@ -16,7 +16,7 @@ import java.util.Vector;
  * messages from the queue to the client socket.
  */
 public class ClientSender extends Thread implements IDisposable {
-    private Vector messageQueue = new Vector();
+    private Vector<String> messageQueue;
     private ServerDispatcher serverDispatcher;
     private ClientHandler clientHandler;
     private PrintWriter out;
@@ -24,6 +24,7 @@ public class ClientSender extends Thread implements IDisposable {
 
     public ClientSender(ClientHandler clientHandler, ServerDispatcher serverDispatcher) throws IOException {
         this.disposed = false;
+        this.messageQueue = new Vector<String>();
         this.clientHandler = clientHandler;
         this.serverDispatcher = serverDispatcher;
         Socket socket = clientHandler.getSocket();
@@ -35,8 +36,8 @@ public class ClientSender extends Thread implements IDisposable {
      * (actually getNextMessageFromQueue method) that a message is arrived.
      * sendMessage is called by other threads (ServeDispatcher).
      */
-    public synchronized void sendMessage(String aMessage) {
-        this.messageQueue.add(aMessage);
+    public synchronized void sendMessage(String message) {
+        this.messageQueue.add(message);
         notify();
     }
 
@@ -49,7 +50,7 @@ public class ClientSender extends Thread implements IDisposable {
         while (this.messageQueue.size() == 0) {
             wait();
         }
-        String message = (String) this.messageQueue.get(0);
+        String message = this.messageQueue.get(0);
         this.messageQueue.removeElementAt(0);
         return message;
     }
@@ -57,8 +58,8 @@ public class ClientSender extends Thread implements IDisposable {
     /**
      * Sends given message to the client's socket.
      */
-    private void sendMessageToClient(String aMessage) {
-        this.out.println(aMessage);
+    private void sendMessageToClient(String message) {
+        this.out.println(message);
         this.out.flush();
     }
 
