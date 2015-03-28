@@ -5,6 +5,9 @@ import java.util.Vector;
 
 /**
  * Created by cschaf on 28.03.2015.
+ * ServerDispatcher class is purposed to listen for messages received
+ * from clients and to dispatch them to all the clients connected to the
+ * chat server.
  */
 public class ServerDispatcher extends Thread {
     private Vector<ClientHandler> clients;

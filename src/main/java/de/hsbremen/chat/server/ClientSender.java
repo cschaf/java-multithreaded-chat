@@ -8,6 +8,10 @@ import java.util.Vector;
 
 /**
  * Created by cschaf on 28.03.2015.
+ * Sends messages to the client. Messages are stored in a message queue. When
+ * the queue is empty, ClientSender falls in sleep until a new message is
+ * arrived in the queue. When the queue is not empty, ClientSender sends the
+ * messages from the queue to the client socket.
  */
 public class ClientSender extends Thread {
     private Vector messageQueue = new Vector();

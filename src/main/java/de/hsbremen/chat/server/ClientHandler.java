@@ -4,6 +4,7 @@ import java.net.Socket;
 
 /**
  * Created by cschaf on 28.03.2015.
+ * ClientHandler class contains information about a client, connected to the server.
  */
 public class ClientHandler {
     private Socket socket = null;

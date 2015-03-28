@@ -7,6 +7,8 @@ import java.net.Socket;
 
 /**
  * Created by cschaf on 28.03.2015.
+ * ClientListener class is purposed to listen for client messages and
+ * to forward them to ServerDispatcher.
  */
 public class ClientListener extends Thread {
     private ServerDispatcher serverDispatcher;
