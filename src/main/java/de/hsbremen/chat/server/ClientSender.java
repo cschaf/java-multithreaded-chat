@@ -1,5 +1,7 @@
 package de.hsbremen.chat.server;
 
+import de.hsbremen.chat.core.IDisposable;
+
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.PrintWriter;
@@ -13,13 +15,15 @@ import java.util.Vector;
  * arrived in the queue. When the queue is not empty, ClientSender sends the
  * messages from the queue to the client socket.
  */
-public class ClientSender extends Thread {
+public class ClientSender extends Thread implements IDisposable{
     private Vector messageQueue = new Vector();
     private ServerDispatcher serverDispatcher;
     private ClientHandler clientHandler;
     private PrintWriter out;
+    private boolean disposed;
 
     public ClientSender(ClientHandler clientHandler, ServerDispatcher serverDispatcher) throws IOException {
+        this.disposed = false;
         this.clientHandler = clientHandler;
         this.serverDispatcher = serverDispatcher;
         Socket socket = clientHandler.getSocket();
@@ -64,7 +68,7 @@ public class ClientSender extends Thread {
      */
     public void run() {
         try {
-            while (!isInterrupted()) {
+            while (!isInterrupted() && !this.disposed) {
                 String message = getNextMessageFromQueue();
                 sendMessageToClient(message);
             }
@@ -75,5 +79,11 @@ public class ClientSender extends Thread {
         // Communication is broken. Interrupt both listener and sender threads
         this.clientHandler.getClientListener().interrupt();
         this.serverDispatcher.deleteClient(this.clientHandler);
+    }
+
+    @Override
+    public void dispose() {
+        this.disposed = true;
+        this.out.close();
     }
 }

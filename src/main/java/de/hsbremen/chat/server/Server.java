@@ -1,5 +1,7 @@
 package de.hsbremen.chat.server;
 
+import de.hsbremen.chat.core.IDisposable;
+
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
@@ -11,10 +13,10 @@ import java.net.Socket;
  * When some client send a message to the server, this message is dispatched
  * to all the clients connected to the server.
  */
-public class Server {
+public class Server implements IDisposable{
     public static final int LISTENING_PORT = 1337;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         // Open server socket for listening
         ServerSocket serverSocket = null;
         try {
@@ -32,6 +34,7 @@ public class Server {
         while (true) {
             try {
                 Socket socket = serverSocket.accept();
+                System.out.println("Client has benn connected");
                 ClientHandler clientHandler = new ClientHandler(socket);
                 ClientListener clientListener = new ClientListener(clientHandler, serverDispatcher);
                 ClientSender clientSender = new ClientSender(clientHandler, serverDispatcher);
@@ -41,8 +44,14 @@ public class Server {
                 clientSender.start();
                 serverDispatcher.addClient(clientHandler);
             } catch (IOException ioe) {
+                serverDispatcher.dispose();
+                serverSocket.close();
                 ioe.printStackTrace();
             }
         }
+    }
+
+    @Override
+    public void dispose() {
     }
 }

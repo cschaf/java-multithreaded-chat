@@ -1,5 +1,7 @@
 package de.hsbremen.chat.server;
 
+import de.hsbremen.chat.core.IDisposable;
+
 import java.net.Socket;
 import java.util.Vector;
 
@@ -9,11 +11,13 @@ import java.util.Vector;
  * from clients and to dispatch them to all the clients connected to the
  * chat server.
  */
-public class ServerDispatcher extends Thread {
+public class ServerDispatcher extends Thread implements IDisposable{
     private Vector<ClientHandler> clients;
     private Vector<String> messageQueue;
+    private boolean disposed;
 
     public ServerDispatcher() {
+        this.disposed = false;
         this.clients = new Vector<ClientHandler>();
         this.messageQueue = new Vector<String>();
     }
@@ -82,12 +86,21 @@ public class ServerDispatcher extends Thread {
      */
     public void run() {
         try {
-            while (true) {
+            while (!this.disposed) {
                 String message = this.getNextMessageFromQueue();
                 this.sendMessageToAllClients(message);
             }
         } catch (InterruptedException ie) {
             // Thread interrupted. Stop its execution
+            this.dispose();
+        }
+    }
+
+    @Override
+    public void dispose() {
+        this.disposed = true;
+        for (ClientHandler clients : this.clients){
+            clients.dispose();
         }
     }
 }
