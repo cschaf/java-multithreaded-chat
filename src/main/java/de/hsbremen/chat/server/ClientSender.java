@@ -15,7 +15,7 @@ import java.util.Vector;
  * arrived in the queue. When the queue is not empty, ClientSender sends the
  * messages from the queue to the client socket.
  */
-public class ClientSender extends Thread implements IDisposable{
+public class ClientSender extends Thread implements IDisposable {
     private Vector messageQueue = new Vector();
     private ServerDispatcher serverDispatcher;
     private ClientHandler clientHandler;
@@ -69,11 +69,12 @@ public class ClientSender extends Thread implements IDisposable{
     public void run() {
         try {
             while (!isInterrupted() && !this.disposed) {
-                String message = getNextMessageFromQueue();
-                sendMessageToClient(message);
+                String message = this.getNextMessageFromQueue();
+                this.sendMessageToClient(message);
             }
         } catch (Exception e) {
             // Commuication problem
+            this.dispose();
         }
 
         // Communication is broken. Interrupt both listener and sender threads

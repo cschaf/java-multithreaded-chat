@@ -11,7 +11,7 @@ import java.util.Vector;
  * from clients and to dispatch them to all the clients connected to the
  * chat server.
  */
-public class ServerDispatcher extends Thread implements IDisposable{
+public class ServerDispatcher extends Thread implements IDisposable {
     private Vector<ClientHandler> clients;
     private Vector<String> messageQueue;
     private boolean disposed;
@@ -37,6 +37,7 @@ public class ServerDispatcher extends Thread implements IDisposable{
         int clientIndex = this.clients.indexOf(clientHandler);
         if (clientIndex != -1) {
             this.clients.removeElementAt(clientIndex);
+            System.out.println(getFormattedMessage(clientHandler, "has disconnected"));
         }
     }
 
@@ -47,12 +48,16 @@ public class ServerDispatcher extends Thread implements IDisposable{
      * a message is arrived.
      */
     public synchronized void dispatchMessage(ClientHandler clientHandler, String message) {
+        message = this.getFormattedMessage(clientHandler, message);
+        this.messageQueue.add(message);
+        notify();
+    }
+
+    public String getFormattedMessage(ClientHandler clientHandler, String message) {
         Socket socket = clientHandler.getSocket();
         String senderIP = socket.getInetAddress().getHostAddress();
         String senderPort = "" + socket.getPort();
-        message = senderIP + ":" + senderPort + " : " + message;
-        this.messageQueue.add(message);
-        notify();
+        return senderIP + ":" + senderPort + " : " + message;
     }
 
     /**
@@ -99,7 +104,7 @@ public class ServerDispatcher extends Thread implements IDisposable{
     @Override
     public void dispose() {
         this.disposed = true;
-        for (ClientHandler clients : this.clients){
+        for (ClientHandler clients : this.clients) {
             clients.dispose();
         }
     }

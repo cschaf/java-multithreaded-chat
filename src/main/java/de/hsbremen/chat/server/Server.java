@@ -34,7 +34,7 @@ public class Server implements IDisposable{
         while (true) {
             try {
                 Socket socket = serverSocket.accept();
-                System.out.println("Client has benn connected");
+
                 ClientHandler clientHandler = new ClientHandler(socket);
                 ClientListener clientListener = new ClientListener(clientHandler, serverDispatcher);
                 ClientSender clientSender = new ClientSender(clientHandler, serverDispatcher);
@@ -43,6 +43,7 @@ public class Server implements IDisposable{
                 clientListener.start();
                 clientSender.start();
                 serverDispatcher.addClient(clientHandler);
+                System.out.println(serverDispatcher.getFormattedMessage(clientHandler, "has connected"));
             } catch (IOException ioe) {
                 serverDispatcher.dispose();
                 serverSocket.close();
