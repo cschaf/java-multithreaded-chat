@@ -1,10 +1,11 @@
 package de.hsbremen.chat.server;
 
 import de.hsbremen.chat.core.IDisposable;
+import de.hsbremen.chat.network.ITransferable;
+import de.hsbremen.chat.network.transferableObjects.Message;
+import de.hsbremen.chat.network.transferableObjects.TransferableObject;
 
-import java.io.IOException;
-import java.io.OutputStreamWriter;
-import java.io.PrintWriter;
+import java.io.*;
 import java.net.Socket;
 import java.util.Vector;
 
@@ -16,19 +17,19 @@ import java.util.Vector;
  * messages from the queue to the client socket.
  */
 public class ClientSender extends Thread implements IDisposable {
-    private Vector<String> messageQueue;
+    private Vector<ITransferable> messageQueue;
     private ServerDispatcher serverDispatcher;
     private ClientHandler clientHandler;
-    private PrintWriter out;
+    private ObjectOutputStream out;
     private boolean disposed;
 
     public ClientSender(ClientHandler clientHandler, ServerDispatcher serverDispatcher) throws IOException {
         this.disposed = false;
-        this.messageQueue = new Vector<String>();
+        this.messageQueue = new Vector<ITransferable>();
         this.clientHandler = clientHandler;
         this.serverDispatcher = serverDispatcher;
         Socket socket = clientHandler.getSocket();
-        this.out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
+        this.out = new ObjectOutputStream(socket.getOutputStream());
     }
 
     /**
@@ -36,8 +37,8 @@ public class ClientSender extends Thread implements IDisposable {
      * (actually getNextMessageFromQueue method) that a message is arrived.
      * sendMessage is called by other threads (ServeDispatcher).
      */
-    public synchronized void sendMessage(String message) {
-        this.messageQueue.add(message);
+    public synchronized void sendMessage(ITransferable transferableObject) {
+        this.messageQueue.add(transferableObject);
         notify();
     }
 
@@ -46,21 +47,26 @@ public class ClientSender extends Thread implements IDisposable {
      * is empty, falls in sleep until notified for message arrival by sendMessage
      * method.
      */
-    private synchronized String getNextMessageFromQueue() throws InterruptedException {
+    private synchronized ITransferable getNextMessageFromQueue() throws InterruptedException {
         while (this.messageQueue.size() == 0) {
             wait();
         }
-        String message = this.messageQueue.get(0);
+        ITransferable transferableObject = this.messageQueue.get(0);
         this.messageQueue.removeElementAt(0);
-        return message;
+        return transferableObject;
     }
 
     /**
      * Sends given message to the client's socket.
      */
-    private void sendMessageToClient(String message) {
-        this.out.println(message);
-        this.out.flush();
+    private void sendMessageToClient(ITransferable transferableObject) {
+        try {
+            this.out.writeObject(transferableObject);
+            this.out.flush();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     /**
@@ -70,7 +76,7 @@ public class ClientSender extends Thread implements IDisposable {
     public void run() {
         try {
             while (!isInterrupted() && !this.disposed) {
-                String message = this.getNextMessageFromQueue();
+                ITransferable message = this.getNextMessageFromQueue();
                 this.sendMessageToClient(message);
             }
         } catch (Exception e) {
@@ -86,6 +92,10 @@ public class ClientSender extends Thread implements IDisposable {
     @Override
     public void dispose() {
         this.disposed = true;
-        this.out.close();
+        try {
+            this.out.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

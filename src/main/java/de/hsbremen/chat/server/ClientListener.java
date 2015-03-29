@@ -1,10 +1,14 @@
 package de.hsbremen.chat.server;
 
 import de.hsbremen.chat.core.IDisposable;
+import de.hsbremen.chat.network.ITransferable;
+import de.hsbremen.chat.network.transferableObjects.Message;
+import de.hsbremen.chat.network.transferableObjects.TransferableObject;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectInputStream;
 import java.net.Socket;
 
 /**
@@ -15,7 +19,7 @@ import java.net.Socket;
 public class ClientListener extends Thread implements IDisposable{
     private ServerDispatcher serverDispatcher;
     private ClientHandler clientHandler;
-    private BufferedReader in;
+    private ObjectInputStream in;
     private boolean disposed;
 
     public ClientListener(ClientHandler clientHandler, ServerDispatcher serverDispatcher) throws IOException {
@@ -23,7 +27,7 @@ public class ClientListener extends Thread implements IDisposable{
         this.clientHandler = clientHandler;
         this.serverDispatcher = serverDispatcher;
         Socket socket = clientHandler.getSocket();
-        this.in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        this.in = new ObjectInputStream(socket.getInputStream());
     }
 
     /**
@@ -33,11 +37,16 @@ public class ClientListener extends Thread implements IDisposable{
     public void run() {
         try {
             while (!isInterrupted() && !this.disposed) {
-                String message = this.in.readLine();
-                if (message == null) {
+                ITransferable receivedObject = null;
+                try {
+                    receivedObject = (ITransferable)this.in.readObject();
+                } catch (ClassNotFoundException e) {
+                    e.printStackTrace();
+                }
+                if (receivedObject == null) {
                     break;
                 }
-                this.serverDispatcher.dispatchMessage(this.clientHandler, message);
+                this.serverDispatcher.dispatchMessage(receivedObject);
             }
         } catch (IOException e) {
             // Problem reading from socket (communication is broken)

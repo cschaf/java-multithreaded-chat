@@ -1,6 +1,9 @@
 package de.hsbremen.chat.client;
 
 import de.hsbremen.chat.core.IDisposable;
+import de.hsbremen.chat.network.ITransferable;
+import de.hsbremen.chat.network.transferableObjects.Message;
+import de.hsbremen.chat.network.transferableObjects.TransferableObject;
 
 import java.io.*;
 import java.net.Socket;
@@ -18,14 +21,14 @@ public class Client implements IDisposable {
     public static final int SERVER_PORT = 1337;
 
     public static void main(String[] args) throws IOException {
-        BufferedReader in = null;
-        PrintWriter out = null;
+        ObjectInputStream in = null;
+        ObjectOutputStream out = null;
         Socket socket = null;
         try {
             // Connect to Server
             socket = new Socket(SERVER_HOSTNAME, SERVER_PORT);
-            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream()));
+            in = new ObjectInputStream(socket.getInputStream());
+            out = new ObjectOutputStream(socket.getOutputStream());
             System.out.println("Connected to server " + SERVER_HOSTNAME + ":" + SERVER_PORT);
         } catch (IOException e) {
             System.err.println("Can not establish connection to " + SERVER_HOSTNAME + ":" + SERVER_PORT);
@@ -33,21 +36,28 @@ public class Client implements IDisposable {
         }
 
         // Create and start Sender thread
-        Sender sender = new Sender(out);
+        Sender sender = new Sender(socket, out);
         sender.setDaemon(true);
         sender.start();
 
         try {
             // Read messages from the server and print them
-            String message;
-            while ((message = in.readLine()) != null) {
-                System.out.println(message);
+            ITransferable receivedObj;
+            while ((receivedObj = (ITransferable) in.readObject()) != null) {
+                switch (receivedObj.getType()){
+                    case Messgage:
+                        Message message = (Message)receivedObj;
+                        System.out.println(message);
+                        break;
+                }
             }
         } catch (IOException e) {
             out.close();
             in.close();
             socket.close();
             System.err.println("Connection to server has been broken.");
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
         }
     }
 

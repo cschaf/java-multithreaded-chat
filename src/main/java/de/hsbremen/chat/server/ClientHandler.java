@@ -44,10 +44,10 @@ public class ClientHandler implements IDisposable {
 
     /**
      * Sets the ClientSender for sending data to the client
-     * @param clientSender
+     * @param sender
      */
-    public void setClientSender(ClientSender clientSender) {
-        this.clientSender = clientSender;
+    public void setClientSender(ClientSender sender) {
+        this.clientSender = sender;
     }
 
     /**
@@ -60,10 +60,10 @@ public class ClientHandler implements IDisposable {
 
     /**
      * Sets the ClientListener for receive data from the client
-     * @param clientListener
+     * @param listener
      */
-    public void setClientListener(ClientListener clientListener) {
-        this.clientListener = clientListener;
+    public void setClientListener(ClientListener listener) {
+        this.clientListener = listener;
     }
 
     @Override

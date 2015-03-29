@@ -1,6 +1,9 @@
 package de.hsbremen.chat.server;
 
 import de.hsbremen.chat.core.IDisposable;
+import de.hsbremen.chat.network.ITransferable;
+import de.hsbremen.chat.network.transferableObjects.Message;
+import de.hsbremen.chat.network.transferableObjects.TransferableObject;
 
 import java.net.Socket;
 import java.util.Vector;
@@ -13,13 +16,13 @@ import java.util.Vector;
  */
 public class ServerDispatcher extends Thread implements IDisposable {
     private Vector<ClientHandler> clients;
-    private Vector<String> messageQueue;
+    private Vector<ITransferable> messageQueue;
     private boolean disposed;
 
     public ServerDispatcher() {
         this.disposed = false;
         this.clients = new Vector<ClientHandler>();
-        this.messageQueue = new Vector<String>();
+        this.messageQueue = new Vector<ITransferable>();
     }
 
     /**
@@ -37,7 +40,7 @@ public class ServerDispatcher extends Thread implements IDisposable {
         int clientIndex = this.clients.indexOf(clientHandler);
         if (clientIndex != -1) {
             this.clients.removeElementAt(clientIndex);
-            System.out.println(getFormattedMessage(clientHandler, "has disconnected"));
+            System.out.println(clientHandler.getSocket().getInetAddress().getHostAddress() + ":" + clientHandler.getSocket().getPort() + " has disconnected");
         }
     }
 
@@ -47,30 +50,23 @@ public class ServerDispatcher extends Thread implements IDisposable {
      * dispatchMessage method is called by other threads (ClientListener) when
      * a message is arrived.
      */
-    public synchronized void dispatchMessage(ClientHandler clientHandler, String message) {
-        message = this.getFormattedMessage(clientHandler, message);
-        this.messageQueue.add(message);
+    public synchronized void dispatchMessage(ITransferable transferableObject) {
+        this.messageQueue.add(transferableObject);
         notify();
     }
 
-    public String getFormattedMessage(ClientHandler clientHandler, String message) {
-        Socket socket = clientHandler.getSocket();
-        String senderIP = socket.getInetAddress().getHostAddress();
-        String senderPort = "" + socket.getPort();
-        return senderIP + ":" + senderPort + " : " + message;
-    }
 
     /**
      * @return and deletes the next message from the message queue. If there is no
      * messages in the queue, falls in sleep until notified by dispatchMessage method.
      */
-    private synchronized String getNextMessageFromQueue() throws InterruptedException {
+    private synchronized ITransferable getNextMessageFromQueue() throws InterruptedException {
         while (this.messageQueue.size() == 0) {
             wait();
         }
-        String message = (String) this.messageQueue.get(0);
+        ITransferable object = this.messageQueue.get(0);
         this.messageQueue.removeElementAt(0);
-        return message;
+        return object;
     }
 
     /**
@@ -78,10 +74,10 @@ public class ServerDispatcher extends Thread implements IDisposable {
      * message is added to the client sender thread's message queue and this
      * client sender thread is notified.
      */
-    private synchronized void sendMessageToAllClients(String message) {
+    private synchronized void sendMessageToAllClients(ITransferable transferableObject) {
         for (int i = 0; i < this.clients.size(); i++) {
             ClientHandler clientHandler = this.clients.get(i);
-            clientHandler.getClientSender().sendMessage(message);
+            clientHandler.getClientSender().sendMessage(transferableObject);
         }
     }
 
@@ -92,8 +88,8 @@ public class ServerDispatcher extends Thread implements IDisposable {
     public void run() {
         try {
             while (!this.disposed) {
-                String message = this.getNextMessageFromQueue();
-                this.sendMessageToAllClients(message);
+                ITransferable object = this.getNextMessageFromQueue();
+                this.sendMessageToAllClients(object);
             }
         } catch (InterruptedException ie) {
             // Thread interrupted. Stop its execution

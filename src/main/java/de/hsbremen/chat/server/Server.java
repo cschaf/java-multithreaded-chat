@@ -1,6 +1,7 @@
 package de.hsbremen.chat.server;
 
 import de.hsbremen.chat.core.IDisposable;
+import de.hsbremen.chat.network.transferableObjects.Message;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -36,14 +37,15 @@ public class Server implements IDisposable{
                 Socket socket = serverSocket.accept();
 
                 ClientHandler clientHandler = new ClientHandler(socket);
-                ClientListener clientListener = new ClientListener(clientHandler, serverDispatcher);
                 ClientSender clientSender = new ClientSender(clientHandler, serverDispatcher);
+                ClientListener clientListener = new ClientListener(clientHandler, serverDispatcher);
+
                 clientHandler.setClientListener(clientListener);
                 clientHandler.setClientSender(clientSender);
                 clientListener.start();
                 clientSender.start();
                 serverDispatcher.addClient(clientHandler);
-                System.out.println(serverDispatcher.getFormattedMessage(clientHandler, "has connected"));
+                System.out.println(clientHandler.getSocket().getInetAddress().getHostAddress() + ":" + clientHandler.getSocket().getPort() + " has connected");
             } catch (IOException ioe) {
                 serverDispatcher.dispose();
                 serverSocket.close();
