@@ -3,7 +3,9 @@ package de.hsbremen.chat.server;
 import de.hsbremen.chat.core.IDisposable;
 import de.hsbremen.chat.events.EventArgs;
 import de.hsbremen.chat.events.listeners.IClientConnectionListener;
+import de.hsbremen.chat.events.listeners.IClientObjectReceivedListener;
 import de.hsbremen.chat.events.listeners.IErrorListener;
+import de.hsbremen.chat.events.listeners.IServerListener;
 import de.hsbremen.chat.network.ITransferable;
 import de.hsbremen.chat.network.MessageType;
 import de.hsbremen.chat.network.transferableObjects.ServerMessage;
@@ -86,6 +88,7 @@ public class ServerDispatcher extends Thread implements IDisposable {
             ClientHandler clientHandler = this.clients.get(i);
             clientHandler.getClientSender().sendMessage(transferableObject);
         }
+        objectReceived(new EventArgs<ITransferable>(this, transferableObject));
     }
 
     /**
@@ -103,6 +106,15 @@ public class ServerDispatcher extends Thread implements IDisposable {
             this.dispose();
         }
     }
+
+    public void addClientObjectReceivedListener(IClientObjectReceivedListener listener) {
+        this.listeners.add(IClientObjectReceivedListener.class, listener);
+    }
+
+    public void removeClientObjectReceivedListener(IClientObjectReceivedListener listener) {
+        this.listeners.remove(IClientObjectReceivedListener.class, listener);
+    }
+
 
     public void addClientConnectionListener(IClientConnectionListener listener) {
         this.listeners.add(IClientConnectionListener.class, listener);
@@ -134,6 +146,15 @@ public class ServerDispatcher extends Thread implements IDisposable {
         for (int i = 0; i < listeners.length; i = i+2) {
             if (listeners[i] == IErrorListener.class) {
                 ((IErrorListener) listeners[i+1]).onError(eventArgs);
+            }
+        }
+    }
+
+    private void objectReceived(EventArgs<ITransferable> eventArgs) {
+        Object[] listeners = this.listeners.getListenerList();
+        for (int i = 0; i < listeners.length; i = i+2) {
+            if (listeners[i] == IClientObjectReceivedListener.class) {
+                ((IClientObjectReceivedListener) listeners[i+1]).onObjectReceived(eventArgs);
             }
         }
     }
