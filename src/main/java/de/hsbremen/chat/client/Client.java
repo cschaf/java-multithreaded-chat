@@ -1,11 +1,10 @@
 package de.hsbremen.chat.client;
 
 import de.hsbremen.chat.core.IDisposable;
-import de.hsbremen.chat.network.ITransferable;
-import de.hsbremen.chat.network.transferableObjects.Message;
-import de.hsbremen.chat.network.transferableObjects.TransferableObject;
 
-import java.io.*;
+import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.net.Socket;
 
 /**
@@ -17,52 +16,57 @@ import java.net.Socket;
  * to the server.
  */
 public class Client implements IDisposable {
-    public static final String SERVER_HOSTNAME = "localhost";
-    public static final int SERVER_PORT = 1337;
+    private String serverIp = "localhost";
+    private int serverPort = 1337;
+    private ObjectInputStream in = null;
+    private ObjectOutputStream out = null;
+    private Socket socket = null;
+    private Sender sender = null;
+    private Listener listener = null;
 
-    public static void main(String[] args) throws IOException {
-        ObjectInputStream in = null;
-        ObjectOutputStream out = null;
-        Socket socket = null;
+    public Client(String serverIp, int serverPort) {
+        this.serverIp = serverIp;
+        this.serverPort = serverPort;
+    }
+
+    /**
+     * Connect to Server
+     */
+    public void connect() {
         try {
-            // Connect to Server
-            socket = new Socket(SERVER_HOSTNAME, SERVER_PORT);
+            socket = new Socket(serverIp, serverPort);
             in = new ObjectInputStream(socket.getInputStream());
             out = new ObjectOutputStream(socket.getOutputStream());
-            System.out.println("Connected to server " + SERVER_HOSTNAME + ":" + SERVER_PORT);
+            System.out.println("Connected to server " + serverIp + ":" + serverPort);
         } catch (IOException e) {
-            System.err.println("Can not establish connection to " + SERVER_HOSTNAME + ":" + SERVER_PORT);
+            this.dispose();
+            System.err.println("Can not establish connection to " + serverIp + ":" + serverPort);
             System.exit(-1);
         }
 
         // Create and start Sender thread
-        Sender sender = new Sender(socket, out);
-        sender.setDaemon(true);
-        sender.start();
+        this.sender = new Sender(socket, out);
+        this.sender.setDaemon(true);
+        this.sender.start();
 
-        try {
-            // Read messages from the server and print them
-            ITransferable receivedObj;
-            while ((receivedObj = (ITransferable) in.readObject()) != null) {
-                switch (receivedObj.getType()){
-                    case Messgage:
-                        Message message = (Message)receivedObj;
-                        System.out.println(message);
-                        break;
-                }
-            }
-        } catch (IOException e) {
-            out.close();
-            in.close();
-            socket.close();
-            System.err.println("Connection to server has been broken.");
-        } catch (ClassNotFoundException e) {
-            e.printStackTrace();
-        }
+        this.listener = new Listener(in);
+        this.listener.start();
+    }
+
+    public void disconnect() {
+        this.dispose();
     }
 
     @Override
     public void dispose() {
-
+        try {
+            this.listener.dispose();
+            this.sender.dispose();
+            this.out.close();
+            this.in.close();
+            this.socket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }

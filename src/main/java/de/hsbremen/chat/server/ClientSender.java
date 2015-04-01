@@ -80,7 +80,6 @@ public class ClientSender extends Thread implements IDisposable {
                 this.sendMessageToClient(message);
             }
         } catch (Exception e) {
-            // Commuication problem
             this.dispose();
         }
 

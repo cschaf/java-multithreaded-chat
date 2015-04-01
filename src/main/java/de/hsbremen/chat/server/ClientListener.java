@@ -50,6 +50,7 @@ public class ClientListener extends Thread implements IDisposable{
             }
         } catch (IOException e) {
             // Problem reading from socket (communication is broken)
+            this.dispose();
         }
 
         // Communication is broken. Interrupt both listener and sender threads

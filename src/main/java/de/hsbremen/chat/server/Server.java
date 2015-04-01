@@ -1,11 +1,9 @@
 package de.hsbremen.chat.server;
 
 import de.hsbremen.chat.core.IDisposable;
-import de.hsbremen.chat.network.transferableObjects.Message;
 
 import java.io.IOException;
 import java.net.ServerSocket;
-import java.net.Socket;
 
 /**
  * Created by cschaf on 28.03.2015.
@@ -14,22 +12,23 @@ import java.net.Socket;
  * When some client send a message to the server, this message is dispatched
  * to all the clients connected to the server.
  */
-public class Server implements IDisposable{
+public class Server implements IDisposable {
     public int port;
-    private ServerSocket  serverSocket = null;
+    private ServerSocket serverSocket = null;
     private ServerDispatcher serverDispatcher = null;
     private ClientAccepter clientAccepter = null;
 
-    public Server(int port){
+    public Server(int port) {
         this.port = port;
     }
-    public void start(){
+
+    public void start() {
         try {
             serverSocket = new ServerSocket(port);
             System.out.println("Server started on port " + port);
         } catch (IOException e) {
+            this.dispose();
             System.err.println("Can not start listening on port " + port);
-            e.printStackTrace();
             System.exit(1);
         }
         // Start ServerDispatcher thread
@@ -40,19 +39,15 @@ public class Server implements IDisposable{
         this.clientAccepter.start();
     }
 
-    public void stop(){
-        this.clientAccepter.dispose();
-        this.serverDispatcher.dispose();
-        try {
-            this.serverSocket.close();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
+    public void stop() {
+        this.dispose();
     }
 
     @Override
     public void dispose() {
         try {
+            this.clientAccepter.dispose();
+            this.serverDispatcher.dispose();
             this.serverSocket.close();
         } catch (IOException e) {
             e.printStackTrace();
