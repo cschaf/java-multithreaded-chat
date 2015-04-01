@@ -15,46 +15,47 @@ import java.net.Socket;
  * to all the clients connected to the server.
  */
 public class Server implements IDisposable{
-    public static final int LISTENING_PORT = 1337;
+    public int port;
+    private ServerSocket  serverSocket = null;
+    private ServerDispatcher serverDispatcher = null;
+    private ClientAccepter clientAccepter = null;
 
-    public static void main(String[] args) throws IOException {
-        // Open server socket for listening
-        ServerSocket serverSocket = null;
+    public Server(int port){
+        this.port = port;
+    }
+    public void start(){
         try {
-            serverSocket = new ServerSocket(LISTENING_PORT);
-            System.out.println("Server started on port " + LISTENING_PORT);
+            serverSocket = new ServerSocket(port);
+            System.out.println("Server started on port " + port);
         } catch (IOException e) {
-            System.err.println("Can not start listening on port " + LISTENING_PORT);
+            System.err.println("Can not start listening on port " + port);
             e.printStackTrace();
             System.exit(1);
         }
         // Start ServerDispatcher thread
-        ServerDispatcher serverDispatcher = new ServerDispatcher();
-        serverDispatcher.start();
+        this.serverDispatcher = new ServerDispatcher();
+        this.serverDispatcher.start();
         // Accept and handle client connections
-        while (true) {
-            try {
-                Socket socket = serverSocket.accept();
+        this.clientAccepter = new ClientAccepter(serverSocket, serverDispatcher);
+        this.clientAccepter.start();
+    }
 
-                ClientHandler clientHandler = new ClientHandler(socket);
-                ClientSender clientSender = new ClientSender(clientHandler, serverDispatcher);
-                ClientListener clientListener = new ClientListener(clientHandler, serverDispatcher);
-
-                clientHandler.setClientListener(clientListener);
-                clientHandler.setClientSender(clientSender);
-                clientListener.start();
-                clientSender.start();
-                serverDispatcher.addClient(clientHandler);
-                System.out.println(clientHandler.getSocket().getInetAddress().getHostAddress() + ":" + clientHandler.getSocket().getPort() + " has connected");
-            } catch (IOException ioe) {
-                serverDispatcher.dispose();
-                serverSocket.close();
-                ioe.printStackTrace();
-            }
+    public void stop(){
+        this.clientAccepter.dispose();
+        this.serverDispatcher.dispose();
+        try {
+            this.serverSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
         }
     }
 
     @Override
     public void dispose() {
+        try {
+            this.serverSocket.close();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 }
