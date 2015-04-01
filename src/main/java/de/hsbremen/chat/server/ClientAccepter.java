@@ -37,7 +37,6 @@ public class ClientAccepter extends Thread implements IDisposable{
                 clientListener.start();
                 clientSender.start();
                 serverDispatcher.addClient(clientHandler);
-                System.out.println(clientHandler.getSocket().getInetAddress().getHostAddress() + ":" + clientHandler.getSocket().getPort() + " has connected");
             } catch (IOException e) {
                 e.printStackTrace();
             }

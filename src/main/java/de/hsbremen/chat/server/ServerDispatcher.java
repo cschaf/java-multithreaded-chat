@@ -1,11 +1,14 @@
 package de.hsbremen.chat.server;
 
 import de.hsbremen.chat.core.IDisposable;
+import de.hsbremen.chat.events.EventArgs;
+import de.hsbremen.chat.events.listeners.IClientConnectionListener;
+import de.hsbremen.chat.events.listeners.IErrorListener;
 import de.hsbremen.chat.network.ITransferable;
-import de.hsbremen.chat.network.transferableObjects.Message;
-import de.hsbremen.chat.network.transferableObjects.TransferableObject;
+import de.hsbremen.chat.network.MessageType;
+import de.hsbremen.chat.network.transferableObjects.ServerMessage;
 
-import java.net.Socket;
+import javax.swing.event.EventListenerList;
 import java.util.Vector;
 
 /**
@@ -15,6 +18,7 @@ import java.util.Vector;
  * chat server.
  */
 public class ServerDispatcher extends Thread implements IDisposable {
+    protected EventListenerList listeners = new EventListenerList();
     private Vector<ClientHandler> clients;
     private Vector<ITransferable> messageQueue;
     private boolean disposed;
@@ -30,6 +34,8 @@ public class ServerDispatcher extends Thread implements IDisposable {
      */
     public synchronized void addClient(ClientHandler clientHandler) {
         this.clients.add(clientHandler);
+        ServerMessage serverMessage = new ServerMessage(clientHandler.getSocket().getInetAddress().getHostAddress() + ":" + clientHandler.getSocket().getPort() + " has connected");
+        clientHasConnected(new EventArgs<ServerMessage>(this, serverMessage));
     }
 
     /**
@@ -40,7 +46,8 @@ public class ServerDispatcher extends Thread implements IDisposable {
         int clientIndex = this.clients.indexOf(clientHandler);
         if (clientIndex != -1) {
             this.clients.removeElementAt(clientIndex);
-            System.out.println(clientHandler.getSocket().getInetAddress().getHostAddress() + ":" + clientHandler.getSocket().getPort() + " has disconnected");
+            ServerMessage serverMessage = new ServerMessage(clientHandler.getSocket().getInetAddress().getHostAddress() + ":" + clientHandler.getSocket().getPort() + " has disconnected");
+            clientHasDisconnected(new EventArgs<ServerMessage>(this, serverMessage));
         }
     }
 
@@ -92,8 +99,42 @@ public class ServerDispatcher extends Thread implements IDisposable {
                 this.sendMessageToAllClients(object);
             }
         } catch (InterruptedException ie) {
-            // Thread interrupted. Stop its execution
+            errorHasOccurred(new EventArgs<ServerMessage>(this, new ServerMessage("ServerDispatcher thread interrupted, stopped its execution", MessageType.Error)));
             this.dispose();
+        }
+    }
+
+    public void addClientConnectionListener(IClientConnectionListener listener) {
+        this.listeners.add(IClientConnectionListener.class, listener);
+    }
+
+    public void removeClientConnectionListener(IClientConnectionListener listener) {
+        this.listeners.remove(IClientConnectionListener.class, listener);
+    }
+
+     private void clientHasConnected(EventArgs<ServerMessage> eventArgs) {
+        Object[] listeners = this.listeners.getListenerList();
+        for (int i = 0; i < listeners.length; i = i+2) {
+            if (listeners[i] == IClientConnectionListener.class) {
+                ((IClientConnectionListener) listeners[i+1]).onClientHasConnected(eventArgs);
+            }
+        }
+    }
+
+    private void clientHasDisconnected(EventArgs<ServerMessage> eventArgs) {
+        Object[] listeners = this.listeners.getListenerList();
+        for (int i = 0; i < listeners.length; i = i+2) {
+            if (listeners[i] == IClientConnectionListener.class) {
+                ((IClientConnectionListener) listeners[i+1]).onClientHasDisconnected(eventArgs);
+            }
+        }
+    }
+    private void errorHasOccurred(EventArgs<ServerMessage> eventArgs) {
+        Object[] listeners = this.listeners.getListenerList();
+        for (int i = 0; i < listeners.length; i = i+2) {
+            if (listeners[i] == IErrorListener.class) {
+                ((IErrorListener) listeners[i+1]).onError(eventArgs);
+            }
         }
     }
 

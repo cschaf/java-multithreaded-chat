@@ -1,7 +1,12 @@
 package de.hsbremen.chat.server;
 
 import de.hsbremen.chat.core.IDisposable;
+import de.hsbremen.chat.events.EventArgs;
+import de.hsbremen.chat.events.listeners.IClientConnectionListener;
+import de.hsbremen.chat.events.listeners.IErrorListener;
+import de.hsbremen.chat.network.transferableObjects.ServerMessage;
 
+import javax.swing.event.EventListenerList;
 import java.io.IOException;
 import java.net.ServerSocket;
 
@@ -41,6 +46,12 @@ public class Server implements IDisposable {
 
     public void stop() {
         this.dispose();
+    }
+    public void addClientConnectionListener(IClientConnectionListener listener) {
+        this.serverDispatcher.addClientConnectionListener(listener);
+    }
+    public void removeClientConnectionListener(IClientConnectionListener listener) {
+        this.serverDispatcher.removeClientConnectionListener(listener);
     }
 
     @Override
