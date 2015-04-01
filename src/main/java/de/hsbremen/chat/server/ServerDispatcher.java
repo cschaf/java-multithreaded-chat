@@ -8,6 +8,7 @@ import de.hsbremen.chat.events.listeners.IErrorListener;
 import de.hsbremen.chat.events.listeners.IServerListener;
 import de.hsbremen.chat.network.ITransferable;
 import de.hsbremen.chat.network.MessageType;
+import de.hsbremen.chat.network.TransferableObjectFactory;
 import de.hsbremen.chat.network.transferableObjects.ServerMessage;
 
 import javax.swing.event.EventListenerList;
@@ -36,8 +37,8 @@ public class ServerDispatcher extends Thread implements IDisposable {
      */
     public synchronized void addClient(ClientHandler clientHandler) {
         this.clients.add(clientHandler);
-        ServerMessage serverMessage = new ServerMessage(clientHandler.getSocket().getInetAddress().getHostAddress() + ":" + clientHandler.getSocket().getPort() + " has connected");
-        clientHasConnected(new EventArgs<ServerMessage>(this, serverMessage));
+        ITransferable serverMessage = TransferableObjectFactory.CreateServerMessage(clientHandler.getSocket().getInetAddress().getHostAddress() + ":" + clientHandler.getSocket().getPort() + " has connected", MessageType.Info);
+        clientHasConnected(new EventArgs<ITransferable>(this, serverMessage));
     }
 
     /**
@@ -48,8 +49,8 @@ public class ServerDispatcher extends Thread implements IDisposable {
         int clientIndex = this.clients.indexOf(clientHandler);
         if (clientIndex != -1) {
             this.clients.removeElementAt(clientIndex);
-            ServerMessage serverMessage = new ServerMessage(clientHandler.getSocket().getInetAddress().getHostAddress() + ":" + clientHandler.getSocket().getPort() + " has disconnected");
-            clientHasDisconnected(new EventArgs<ServerMessage>(this, serverMessage));
+            ITransferable serverMessage = TransferableObjectFactory.CreateServerMessage(clientHandler.getSocket().getInetAddress().getHostAddress() + ":" + clientHandler.getSocket().getPort() + " (" + clientHandler.getUsername() + ")" + " has disconnected", MessageType.Info);
+            clientHasDisconnected(new EventArgs<ITransferable>(this, serverMessage));
         }
     }
 
@@ -102,7 +103,7 @@ public class ServerDispatcher extends Thread implements IDisposable {
                 this.sendMessageToAllClients(object);
             }
         } catch (InterruptedException ie) {
-            errorHasOccurred(new EventArgs<ServerMessage>(this, new ServerMessage("ServerDispatcher thread interrupted, stopped its execution", MessageType.Error)));
+            errorHasOccurred(new EventArgs<ITransferable>(this, TransferableObjectFactory.CreateServerMessage("ServerDispatcher thread interrupted, stopped its execution", MessageType.Error)));
             this.dispose();
         }
     }
@@ -124,7 +125,7 @@ public class ServerDispatcher extends Thread implements IDisposable {
         this.listeners.remove(IClientConnectionListener.class, listener);
     }
 
-     private void clientHasConnected(EventArgs<ServerMessage> eventArgs) {
+     private void clientHasConnected(EventArgs<ITransferable> eventArgs) {
         Object[] listeners = this.listeners.getListenerList();
         for (int i = 0; i < listeners.length; i = i+2) {
             if (listeners[i] == IClientConnectionListener.class) {
@@ -133,7 +134,7 @@ public class ServerDispatcher extends Thread implements IDisposable {
         }
     }
 
-    private void clientHasDisconnected(EventArgs<ServerMessage> eventArgs) {
+    private void clientHasDisconnected(EventArgs<ITransferable> eventArgs) {
         Object[] listeners = this.listeners.getListenerList();
         for (int i = 0; i < listeners.length; i = i+2) {
             if (listeners[i] == IClientConnectionListener.class) {
@@ -141,7 +142,7 @@ public class ServerDispatcher extends Thread implements IDisposable {
             }
         }
     }
-    private void errorHasOccurred(EventArgs<ServerMessage> eventArgs) {
+    private void errorHasOccurred(EventArgs<ITransferable> eventArgs) {
         Object[] listeners = this.listeners.getListenerList();
         for (int i = 0; i < listeners.length; i = i+2) {
             if (listeners[i] == IErrorListener.class) {

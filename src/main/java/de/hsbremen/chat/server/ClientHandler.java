@@ -13,6 +13,7 @@ public class ClientHandler implements IDisposable {
     private Socket socket = null;
     private ClientSender clientSender = null;
     private ClientListener clientListener = null;
+    private String username = null;
 
     public ClientHandler(Socket socket) {
         this.socket = socket;
@@ -75,5 +76,13 @@ public class ClientHandler implements IDisposable {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    public String getUsername() {
+        return username;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 }

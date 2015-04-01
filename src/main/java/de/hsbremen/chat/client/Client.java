@@ -23,10 +23,12 @@ public class Client implements IDisposable {
     private Socket socket = null;
     private Sender sender = null;
     private Listener listener = null;
+    private String username = null;
 
-    public Client(String serverIp, int serverPort) {
+    public Client(String serverIp, int serverPort, String username) {
         this.serverIp = serverIp;
         this.serverPort = serverPort;
+        this.username = username;
     }
 
     /**
@@ -45,7 +47,7 @@ public class Client implements IDisposable {
         }
 
         // Create and start Sender thread
-        this.sender = new Sender(socket, out);
+        this.sender = new Sender(socket, out, this.username);
         this.sender.setDaemon(true);
         this.sender.start();
 

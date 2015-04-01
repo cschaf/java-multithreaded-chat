@@ -5,7 +5,9 @@ import de.hsbremen.chat.events.EventArgs;
 import de.hsbremen.chat.events.listeners.IClientConnectionListener;
 import de.hsbremen.chat.events.listeners.IClientObjectReceivedListener;
 import de.hsbremen.chat.events.listeners.IServerListener;
+import de.hsbremen.chat.network.ITransferable;
 import de.hsbremen.chat.network.MessageType;
+import de.hsbremen.chat.network.TransferableObjectFactory;
 import de.hsbremen.chat.network.transferableObjects.ServerMessage;
 
 import javax.swing.event.EventListenerList;
@@ -38,9 +40,9 @@ public class Server implements IDisposable {
     public void start() {
         try {
             serverSocket = new ServerSocket(port);
-            printInfo(new EventArgs<ServerMessage>(this, new ServerMessage("Server started on port " + port)));
+            printInfo(new EventArgs<ITransferable>(this, TransferableObjectFactory.CreateServerMessage("Server started on port " + port, MessageType.Info)));
         } catch (IOException e) {
-            errorHasOccurred(new EventArgs<ServerMessage>(this, new ServerMessage("Can not start listening on port " + port, MessageType.Error)));
+            errorHasOccurred(new EventArgs<ITransferable>(this, TransferableObjectFactory.CreateServerMessage("Can not start listening on port " + port, MessageType.Error)));
             System.exit(1);
         }
         // Start ServerDispatcher thread
@@ -94,7 +96,7 @@ public class Server implements IDisposable {
         this.listeners.remove(IServerListener.class, listener);
     }
 
-    private void errorHasOccurred(EventArgs<ServerMessage> eventArgs) {
+    private void errorHasOccurred(EventArgs<ITransferable> eventArgs) {
         Object[] listeners = this.listeners.getListenerList();
         for (int i = 0; i < listeners.length; i = i + 2) {
             if (listeners[i] == IServerListener.class) {
@@ -103,7 +105,7 @@ public class Server implements IDisposable {
         }
     }
 
-    private void printInfo(EventArgs<ServerMessage> eventArgs) {
+    private void printInfo(EventArgs<ITransferable> eventArgs) {
         Object[] listeners = this.listeners.getListenerList();
         for (int i = 0; i < listeners.length; i = i + 2) {
             if (listeners[i] == IServerListener.class) {
@@ -119,7 +121,7 @@ public class Server implements IDisposable {
             this.serverDispatcher.dispose();
             this.serverSocket.close();
         } catch (IOException e) {
-            errorHasOccurred(new EventArgs<ServerMessage>(this, new ServerMessage("Can not dispose Server", MessageType.Error)));
+            errorHasOccurred(new EventArgs<ITransferable>(this, TransferableObjectFactory.CreateServerMessage("Can not dispose Server", MessageType.Error)));
         }
     }
 }

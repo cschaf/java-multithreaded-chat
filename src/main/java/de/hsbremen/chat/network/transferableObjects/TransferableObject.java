@@ -10,12 +10,8 @@ import java.sql.Timestamp;
  */
 public abstract class TransferableObject implements Serializable, ITransferable {
     private Timestamp createdAt;
-    private String senderIp;
-    private int port;
 
-    protected TransferableObject(String senderIp, int port) {
-        this.senderIp = senderIp;
-        this.port = port;
+    protected TransferableObject() {
     }
 
     public Timestamp getCreatedAt() {
@@ -26,24 +22,8 @@ public abstract class TransferableObject implements Serializable, ITransferable 
         this.createdAt = createdAt;
     }
 
-    public String getSenderIp() {
-        return senderIp;
-    }
-
-    public void setSenderIp(String senderIp) {
-        this.senderIp = senderIp;
-    }
-
-    public int getPort() {
-        return port;
-    }
-
-    public void setPort(int port) {
-        this.port = port;
-    }
-
     @Override
     public String toString() {
-        return "(" +this.getCreatedAt()+ ")" +  this.getSenderIp() + ":" + this.getPort();
+        return "created at: " + this.getCreatedAt();
     }
 }

@@ -15,8 +15,10 @@ public class Sender extends Thread implements IDisposable {
     private ObjectOutputStream out;
     private Socket socket;
     private boolean disposed;
+    private String username;
 
-    public Sender(Socket socket, ObjectOutputStream out) {
+    public Sender(Socket socket, ObjectOutputStream out, String username) {
+        this.username = username;
         this.disposed = false;
         this.socket = socket;
         this.out = out;
@@ -29,10 +31,12 @@ public class Sender extends Thread implements IDisposable {
     public void run() {
         try {
             BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
+            this.out.writeObject(TransferableObjectFactory.CreateClientInfo(this.username));
+            this.out.flush();
             while (!isInterrupted() && !this.disposed) {
                 String message = in.readLine();
                 if(message != null){
-                    this.out.writeObject(TransferableObjectFactory.CreateMessage(socket, message));
+                    this.out.writeObject(TransferableObjectFactory.CreateMessage(socket, this.username, message));
                     this.out.flush();
                 }
             }

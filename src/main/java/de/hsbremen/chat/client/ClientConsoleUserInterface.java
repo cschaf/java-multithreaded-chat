@@ -7,7 +7,7 @@ import de.hsbremen.chat.core.IDisposable;
  */
 public class ClientConsoleUserInterface{
     public static void main(String[] args){
-        Client client = new Client("localhost", 1337);
+        Client client = new Client("localhost", 1337, "Shuffle");
         client.connect();
     }
 }
