@@ -1,7 +1,10 @@
 package de.hsbremen.chat.server;
 
 import de.hsbremen.chat.core.IDisposable;
+import de.hsbremen.chat.events.EventArgs;
 import de.hsbremen.chat.network.ITransferable;
+import de.hsbremen.chat.network.MessageType;
+import de.hsbremen.chat.network.TransferableObjectFactory;
 import de.hsbremen.chat.network.transferableObjects.ClientInfo;
 
 import java.io.IOException;
@@ -56,7 +59,7 @@ public class ClientListener extends Thread implements IDisposable {
 
             }
         } catch (IOException e) {
-            // Problem reading from socket (communication is broken)
+            this.serverDispatcher.errorHasOccurred(new EventArgs<ITransferable>(this, TransferableObjectFactory.CreateServerMessage("Problem reading from socket (communication is broken)", MessageType.Error)));
             this.dispose();
         }
 

@@ -41,8 +41,8 @@ public class Client implements IDisposable {
             out = new ObjectOutputStream(socket.getOutputStream());
             System.out.println("Connected to server " + serverIp + ":" + serverPort);
         } catch (IOException e) {
-            this.dispose();
             System.err.println("Can not establish connection to " + serverIp + ":" + serverPort);
+            this.dispose();
             System.exit(-1);
         }
 
@@ -62,11 +62,21 @@ public class Client implements IDisposable {
     @Override
     public void dispose() {
         try {
-            this.listener.dispose();
-            this.sender.dispose();
-            this.out.close();
-            this.in.close();
-            this.socket.close();
+            if (this.listener != null) {
+                this.listener.dispose();
+            }
+            if (this.sender != null) {
+                this.sender.dispose();
+            }
+            if (this.out != null) {
+                this.out.close();
+            }
+            if (this.in != null) {
+                this.in.close();
+            }
+            if (this.socket != null) {
+                this.socket.close();
+            }
         } catch (IOException e) {
             e.printStackTrace();
         }

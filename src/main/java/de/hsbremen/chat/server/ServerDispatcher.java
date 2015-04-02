@@ -142,7 +142,7 @@ public class ServerDispatcher extends Thread implements IDisposable {
             }
         }
     }
-    private void errorHasOccurred(EventArgs<ITransferable> eventArgs) {
+    public void errorHasOccurred(EventArgs<ITransferable> eventArgs) {
         Object[] listeners = this.listeners.getListenerList();
         for (int i = 0; i < listeners.length; i = i+2) {
             if (listeners[i] == IErrorListener.class) {

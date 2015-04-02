@@ -8,7 +8,6 @@ import de.hsbremen.chat.events.listeners.IServerListener;
 import de.hsbremen.chat.network.ITransferable;
 import de.hsbremen.chat.network.MessageType;
 import de.hsbremen.chat.network.TransferableObjectFactory;
-import de.hsbremen.chat.network.transferableObjects.ServerMessage;
 
 import javax.swing.event.EventListenerList;
 import java.io.IOException;
@@ -43,7 +42,8 @@ public class Server implements IDisposable {
             printInfo(new EventArgs<ITransferable>(this, TransferableObjectFactory.CreateServerMessage("Server started on port " + port, MessageType.Info)));
         } catch (IOException e) {
             errorHasOccurred(new EventArgs<ITransferable>(this, TransferableObjectFactory.CreateServerMessage("Can not start listening on port " + port, MessageType.Error)));
-            System.exit(1);
+            this.dispose();
+            System.exit(-1);
         }
         // Start ServerDispatcher thread
         this.serverDispatcher = new ServerDispatcher();
@@ -117,9 +117,15 @@ public class Server implements IDisposable {
     @Override
     public void dispose() {
         try {
-            this.clientAccepter.dispose();
-            this.serverDispatcher.dispose();
-            this.serverSocket.close();
+            if (this.clientAccepter != null) {
+                this.clientAccepter.dispose();
+            }
+            if (this.serverDispatcher != null) {
+                this.serverDispatcher.dispose();
+            }
+            if (this.serverSocket != null) {
+                this.serverSocket.close();
+            }
         } catch (IOException e) {
             errorHasOccurred(new EventArgs<ITransferable>(this, TransferableObjectFactory.CreateServerMessage("Can not dispose Server", MessageType.Error)));
         }

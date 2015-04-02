@@ -1,7 +1,10 @@
 package de.hsbremen.chat.server;
 
 import de.hsbremen.chat.core.IDisposable;
+import de.hsbremen.chat.events.EventArgs;
 import de.hsbremen.chat.network.ITransferable;
+import de.hsbremen.chat.network.MessageType;
+import de.hsbremen.chat.network.TransferableObjectFactory;
 import de.hsbremen.chat.network.transferableObjects.Message;
 import de.hsbremen.chat.network.transferableObjects.TransferableObject;
 
@@ -94,7 +97,7 @@ public class ClientSender extends Thread implements IDisposable {
         try {
             this.out.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            this.serverDispatcher.errorHasOccurred(new EventArgs<ITransferable>(this, TransferableObjectFactory.CreateServerMessage("ClientSender outputstream could not been closed!", MessageType.Error)));
         }
     }
 }
