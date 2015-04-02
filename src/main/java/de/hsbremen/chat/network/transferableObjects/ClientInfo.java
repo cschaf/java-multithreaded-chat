@@ -1,5 +1,6 @@
 package de.hsbremen.chat.network.transferableObjects;
 
+import de.hsbremen.chat.network.ITransferable;
 import de.hsbremen.chat.network.TransferableType;
 
 /**
@@ -7,14 +8,19 @@ import de.hsbremen.chat.network.TransferableType;
  */
 public class ClientInfo extends TransferableObject {
 
-    private String username;
+    private String username = null;
+    private String message = null;
 
-    public ClientInfo(String username) {
+    public ClientInfo(String username, String message) {
         this.username = username;
+        this.message = message;
     }
 
     public String getUsername() {
         return this.username;
+    }
+    public String getMessage() {
+        return this.message;
     }
 
     @Override

@@ -13,6 +13,11 @@ public class ClientConnectionConsoleListener implements IClientConnectionListene
     }
 
     @Override
+    public void onClientHasSetName(EventArgs<ITransferable> eventArgs) {
+        System.out.println(eventArgs.getItem());
+    }
+
+    @Override
     public void onClientHasDisconnected(EventArgs<ITransferable> eventArgs) {
         System.out.println(eventArgs.getItem());
     }

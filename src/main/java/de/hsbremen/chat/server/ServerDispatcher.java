@@ -69,6 +69,7 @@ public class ServerDispatcher extends Thread implements IDisposable {
      */
     public synchronized void dispatchMessage(ITransferable transferableObject) {
         this.messageQueue.add(transferableObject);
+        objectReceived(new EventArgs<ITransferable>(this, transferableObject));
         notify();
     }
 
@@ -91,12 +92,11 @@ public class ServerDispatcher extends Thread implements IDisposable {
      * message is added to the client sender thread's message queue and this
      * client sender thread is notified.
      */
-    private synchronized void sendMessageToAllClients(ITransferable transferableObject) {
+    public synchronized void sendMessageToAllClients(ITransferable transferableObject) {
         for (int i = 0; i < this.clients.size(); i++) {
             ClientHandler clientHandler = this.clients.get(i);
             clientHandler.getClientSender().sendMessage(transferableObject);
         }
-        objectReceived(new EventArgs<ITransferable>(this, transferableObject));
     }
 
     /**
@@ -155,6 +155,15 @@ public class ServerDispatcher extends Thread implements IDisposable {
         for (int i = 0; i < listeners.length; i = i+2) {
             if (listeners[i] == IClientObjectReceivedListener.class) {
                 ((IClientObjectReceivedListener) listeners[i+1]).onObjectReceived(eventArgs);
+            }
+        }
+    }
+
+    public void clientHasSetName(EventArgs<ITransferable> eventArgs) {
+        Object[] listeners = this.listeners.getListenerList();
+        for (int i = 0; i < listeners.length; i = i+2) {
+            if (listeners[i] == IClientConnectionListener.class) {
+                ((IClientConnectionListener) listeners[i+1]).onClientHasSetName(eventArgs);
             }
         }
     }

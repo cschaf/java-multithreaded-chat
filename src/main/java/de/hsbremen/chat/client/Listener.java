@@ -2,6 +2,7 @@ package de.hsbremen.chat.client;
 
 import de.hsbremen.chat.core.IDisposable;
 import de.hsbremen.chat.network.ITransferable;
+import de.hsbremen.chat.network.transferableObjects.ClientInfo;
 import de.hsbremen.chat.network.transferableObjects.Message;
 
 import java.io.IOException;
@@ -27,6 +28,10 @@ public class Listener extends Thread implements IDisposable {
                     case Messgage:
                         Message message = (Message)receivedObj;
                         System.out.println(message);
+                        break;
+                    case ClientInfo:
+                        ClientInfo clientInfo = (ClientInfo) receivedObj;
+                        System.out.println(clientInfo.getMessage());
                         break;
                 }
             }

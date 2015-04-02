@@ -1,6 +1,7 @@
 package de.hsbremen.chat.client;
 
 import de.hsbremen.chat.core.IDisposable;
+import de.hsbremen.chat.network.MessageType;
 import de.hsbremen.chat.network.TransferableObjectFactory;
 import de.hsbremen.chat.network.transferableObjects.Message;
 
@@ -31,7 +32,7 @@ public class Sender extends Thread implements IDisposable {
     public void run() {
         try {
             BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-            this.out.writeObject(TransferableObjectFactory.CreateClientInfo(this.username));
+            this.out.writeObject(TransferableObjectFactory.CreateClientInfo(this.username, "set username"));
             this.out.flush();
             while (!isInterrupted() && !this.disposed) {
                 String message = in.readLine();

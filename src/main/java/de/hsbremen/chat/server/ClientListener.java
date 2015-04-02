@@ -51,15 +51,18 @@ public class ClientListener extends Thread implements IDisposable {
                         ClientInfo info = (ClientInfo) receivedObject;
                         if (clientHandler.getUsername() != info.getUsername()) {
                             clientHandler.setUsername(info.getUsername());
+                            ITransferable serverMessage = TransferableObjectFactory.CreateServerMessage(clientHandler.getSocket().getInetAddress().getHostAddress() + ":" + clientHandler.getSocket().getPort() + " has set name to " + info.getUsername(), MessageType.Info);
+                            EventArgs<ITransferable> eventArgs = new EventArgs<ITransferable>(this, serverMessage);
+                            serverDispatcher.clientHasSetName(eventArgs);
+                            serverDispatcher.sendMessageToAllClients(TransferableObjectFactory.CreateClientInfo(clientHandler.getUsername(), clientHandler.getUsername() + " has connected"));
                         }
                         break;
                     default:
                         this.serverDispatcher.dispatchMessage(receivedObject);
                 }
-
             }
         } catch (IOException e) {
-            this.serverDispatcher.getErrorHandler().errorHasOccurred(new EventArgs<ITransferable>(this, TransferableObjectFactory.CreateServerMessage("Problem reading from socket (communication is broken)", MessageType.Error)));
+            this.serverDispatcher.getErrorHandler().errorHasOccurred(new EventArgs<ITransferable>(this, TransferableObjectFactory.CreateServerMessage("Problem reading from socket(" + clientHandler.getSocket().getInetAddress().getHostAddress() + ":" + clientHandler.getSocket().getPort() + ") -> communication is broken", MessageType.Error)));
             this.dispose();
         }
 
