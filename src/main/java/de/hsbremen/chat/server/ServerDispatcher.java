@@ -1,5 +1,6 @@
 package de.hsbremen.chat.server;
 
+import de.hsbremen.chat.core.ErrorHandler;
 import de.hsbremen.chat.core.IDisposable;
 import de.hsbremen.chat.events.EventArgs;
 import de.hsbremen.chat.events.listeners.IClientConnectionListener;
@@ -25,11 +26,17 @@ public class ServerDispatcher extends Thread implements IDisposable {
     private Vector<ClientHandler> clients;
     private Vector<ITransferable> messageQueue;
     private boolean disposed;
+    private ErrorHandler errorHandler;
 
-    public ServerDispatcher() {
+    public ServerDispatcher(ErrorHandler errorHandler) {
+        this.errorHandler = errorHandler;
         this.disposed = false;
         this.clients = new Vector<ClientHandler>();
         this.messageQueue = new Vector<ITransferable>();
+    }
+
+    public ErrorHandler getErrorHandler(){
+        return this.errorHandler;
     }
 
     /**
@@ -103,7 +110,7 @@ public class ServerDispatcher extends Thread implements IDisposable {
                 this.sendMessageToAllClients(object);
             }
         } catch (InterruptedException ie) {
-            errorHasOccurred(new EventArgs<ITransferable>(this, TransferableObjectFactory.CreateServerMessage("ServerDispatcher thread interrupted, stopped its execution", MessageType.Error)));
+            this.errorHandler.errorHasOccurred(new EventArgs<ITransferable>(this, TransferableObjectFactory.CreateServerMessage("ServerDispatcher thread interrupted, stopped its execution", MessageType.Error)));
             this.dispose();
         }
     }
@@ -139,14 +146,6 @@ public class ServerDispatcher extends Thread implements IDisposable {
         for (int i = 0; i < listeners.length; i = i+2) {
             if (listeners[i] == IClientConnectionListener.class) {
                 ((IClientConnectionListener) listeners[i+1]).onClientHasDisconnected(eventArgs);
-            }
-        }
-    }
-    public void errorHasOccurred(EventArgs<ITransferable> eventArgs) {
-        Object[] listeners = this.listeners.getListenerList();
-        for (int i = 0; i < listeners.length; i = i+2) {
-            if (listeners[i] == IErrorListener.class) {
-                ((IErrorListener) listeners[i+1]).onError(eventArgs);
             }
         }
     }

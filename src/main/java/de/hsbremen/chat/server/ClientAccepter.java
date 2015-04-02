@@ -1,7 +1,10 @@
 package de.hsbremen.chat.server;
 
 import de.hsbremen.chat.core.IDisposable;
+import de.hsbremen.chat.events.EventArgs;
 import de.hsbremen.chat.network.ITransferable;
+import de.hsbremen.chat.network.MessageType;
+import de.hsbremen.chat.network.TransferableObjectFactory;
 
 import java.io.IOException;
 import java.net.ServerSocket;
@@ -38,7 +41,7 @@ public class ClientAccepter extends Thread implements IDisposable{
                 clientSender.start();
                 serverDispatcher.addClient(clientHandler);
             } catch (IOException e) {
-                e.printStackTrace();
+                this.serverDispatcher.getErrorHandler().errorHasOccurred(new EventArgs<ITransferable>(this, TransferableObjectFactory.CreateServerMessage("Could not accepted client", MessageType.Error)));
             }
         }
     }

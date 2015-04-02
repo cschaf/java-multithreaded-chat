@@ -97,7 +97,7 @@ public class ClientSender extends Thread implements IDisposable {
         try {
             this.out.close();
         } catch (IOException e) {
-            this.serverDispatcher.errorHasOccurred(new EventArgs<ITransferable>(this, TransferableObjectFactory.CreateServerMessage("ClientSender outputstream could not been closed!", MessageType.Error)));
+            this.serverDispatcher.getErrorHandler().errorHasOccurred(new EventArgs<ITransferable>(this, TransferableObjectFactory.CreateServerMessage("ClientSender outputstream could not been closed!", MessageType.Error)));
         }
     }
 }

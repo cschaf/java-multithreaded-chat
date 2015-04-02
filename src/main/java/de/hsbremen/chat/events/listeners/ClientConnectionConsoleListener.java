@@ -16,9 +16,4 @@ public class ClientConnectionConsoleListener implements IClientConnectionListene
     public void onClientHasDisconnected(EventArgs<ITransferable> eventArgs) {
         System.out.println(eventArgs.getItem());
     }
-
-    @Override
-    public void onError(EventArgs<ITransferable> eventArgs) {
-        System.out.println(eventArgs.getItem());
-    }
 }

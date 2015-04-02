@@ -59,7 +59,7 @@ public class ClientListener extends Thread implements IDisposable {
 
             }
         } catch (IOException e) {
-            this.serverDispatcher.errorHasOccurred(new EventArgs<ITransferable>(this, TransferableObjectFactory.CreateServerMessage("Problem reading from socket (communication is broken)", MessageType.Error)));
+            this.serverDispatcher.getErrorHandler().errorHasOccurred(new EventArgs<ITransferable>(this, TransferableObjectFactory.CreateServerMessage("Problem reading from socket (communication is broken)", MessageType.Error)));
             this.dispose();
         }
 

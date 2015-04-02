@@ -8,6 +8,6 @@ import java.util.EventListener;
 /**
  * Created by cschaf on 01.04.2015.
  */
-public interface IServerListener extends EventListener, IErrorListener {
+public interface IServerListener extends EventListener {
     void onInfo(EventArgs<ITransferable> eventArgs);
 }
