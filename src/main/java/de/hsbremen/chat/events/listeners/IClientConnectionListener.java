@@ -12,4 +12,5 @@ public interface IClientConnectionListener extends EventListener {
     void onClientHasConnected(EventArgs<ITransferable> eventArgs);
     void onClientHasSetName(EventArgs<ITransferable> eventArgs);
     void onClientHasDisconnected(EventArgs<ITransferable> eventArgs);
+    void onClientHasSignedIn(EventArgs<ITransferable> eventArgs);
 }

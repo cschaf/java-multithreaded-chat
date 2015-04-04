@@ -7,7 +7,7 @@ import de.hsbremen.chat.network.TransferableType;
 /**
  * Created by cschaf on 01.04.2015.
  */
-public class ServerMessage implements ITransferable {
+public class ServerMessage extends TransferableObject {
     private String message;
     private MessageType type;
 
@@ -42,6 +42,7 @@ public class ServerMessage implements ITransferable {
             default:
                 result = this.getMessage();
         }
+        result += " - " + String.format("%1$TT", this.getCreatedAt());
         return result;
     }
 

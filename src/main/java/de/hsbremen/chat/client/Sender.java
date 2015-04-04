@@ -1,8 +1,11 @@
 package de.hsbremen.chat.client;
 
 import de.hsbremen.chat.core.IDisposable;
+import de.hsbremen.chat.network.ITransferable;
 import de.hsbremen.chat.network.MessageType;
 import de.hsbremen.chat.network.TransferableObjectFactory;
+import de.hsbremen.chat.network.transferableObjects.ClientInfo;
+import de.hsbremen.chat.network.transferableObjects.ClientInfoSendingReason;
 import de.hsbremen.chat.network.transferableObjects.Message;
 
 import java.io.*;
@@ -32,12 +35,13 @@ public class Sender extends Thread implements IDisposable {
     public void run() {
         try {
             BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-            this.out.writeObject(TransferableObjectFactory.CreateClientInfo(this.username, "set username"));
+            this.out.writeObject(TransferableObjectFactory.CreateClientInfo(this.username,socket.getInetAddress().getHostAddress(), socket.getLocalPort(), ClientInfoSendingReason.Connect));
             this.out.flush();
             while (!isInterrupted() && !this.disposed) {
                 String message = in.readLine();
                 if(message != null){
-                    this.out.writeObject(TransferableObjectFactory.CreateMessage(socket, this.username, message));
+                    ITransferable sender = TransferableObjectFactory.CreateClientInfo(this.username, socket.getInetAddress().getHostAddress(), socket.getLocalPort());
+                    this.out.writeObject(TransferableObjectFactory.CreateMessage(message, sender));
                     this.out.flush();
                 }
             }

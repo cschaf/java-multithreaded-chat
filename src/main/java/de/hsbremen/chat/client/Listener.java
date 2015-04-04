@@ -4,6 +4,9 @@ import de.hsbremen.chat.core.IDisposable;
 import de.hsbremen.chat.network.ITransferable;
 import de.hsbremen.chat.network.transferableObjects.ClientInfo;
 import de.hsbremen.chat.network.transferableObjects.Message;
+import de.hsbremen.chat.network.transferableObjects.ServerInfo;
+import de.hsbremen.chat.network.transferableObjects.ServerMessage;
+import de.hsbremen.chat.server.Server;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -29,9 +32,34 @@ public class Listener extends Thread implements IDisposable {
                         Message message = (Message)receivedObj;
                         System.out.println(message);
                         break;
+                    case ServerMessage:
+                        ServerMessage serverMessage = (ServerMessage) receivedObj;
+                        System.out.println(serverMessage);
+                        break;
+                    case ServerInfo:
+                        ServerInfo serverInfo = (ServerInfo) receivedObj;
+                        if (serverInfo.getUsers().size() >0){
+                            System.out.println("--- connected users ---");
+                            for (String user : serverInfo.getUsers()){
+                                System.out.println(user);
+                            }
+                            System.out.println("--- end ---");
+                        }
+                        break;
                     case ClientInfo:
                         ClientInfo clientInfo = (ClientInfo) receivedObj;
-                        System.out.println(clientInfo.getMessage());
+                        switch (clientInfo.getReason()){
+                            case Connect:
+                                System.out.println("--- New User for user list");
+                                System.out.println(clientInfo.getUsername() + "(" + clientInfo.getPort() + ")");
+                                System.out.println("--- end ---");
+                                break;
+                            case Disconnect:
+                                System.out.println("--- Remove User from user list");
+                                System.out.println(clientInfo.getUsername() + "(" + clientInfo.getPort() + ")");
+                                System.out.println("--- end ---");
+                                break;
+                        }
                         break;
                 }
             }

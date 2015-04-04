@@ -10,9 +10,12 @@ import de.hsbremen.chat.events.listeners.IServerListener;
 import de.hsbremen.chat.network.ITransferable;
 import de.hsbremen.chat.network.MessageType;
 import de.hsbremen.chat.network.TransferableObjectFactory;
+import de.hsbremen.chat.network.transferableObjects.ClientInfoSendingReason;
 import de.hsbremen.chat.network.transferableObjects.ServerMessage;
+import de.hsbremen.chat.network.transferableObjects.TransferableObject;
 
 import javax.swing.event.EventListenerList;
+import java.util.ArrayList;
 import java.util.Vector;
 
 /**
@@ -33,6 +36,15 @@ public class ServerDispatcher extends Thread implements IDisposable {
         this.disposed = false;
         this.clients = new Vector<ClientHandler>();
         this.messageQueue = new Vector<ITransferable>();
+    }
+
+    public ArrayList<String> getUsers(){
+        ArrayList<String> result = new ArrayList<String>();
+        for(ClientHandler handler : this.clients){
+            result.add(handler.getUsername() + "(" + handler.getSocket().getPort() + ")");
+        }
+
+        return result;
     }
 
     public ErrorHandler getErrorHandler(){
@@ -58,6 +70,8 @@ public class ServerDispatcher extends Thread implements IDisposable {
             this.clients.removeElementAt(clientIndex);
             ITransferable serverMessage = TransferableObjectFactory.CreateServerMessage(clientHandler.getSocket().getInetAddress().getHostAddress() + ":" + clientHandler.getSocket().getPort() + " (" + clientHandler.getUsername() + ")" + " has disconnected", MessageType.Info);
             clientHasDisconnected(new EventArgs<ITransferable>(this, serverMessage));
+            // send to client the disconnected user info
+            this.sendMessageToAllClients(TransferableObjectFactory.CreateClientInfo(clientHandler.getUsername(), clientHandler.getSocket().getInetAddress().getHostAddress(), clientHandler.getSocket().getPort(), ClientInfoSendingReason.Disconnect), clientHandler);
         }
     }
 
@@ -92,10 +106,23 @@ public class ServerDispatcher extends Thread implements IDisposable {
      * message is added to the client sender thread's message queue and this
      * client sender thread is notified.
      */
-    public synchronized void sendMessageToAllClients(ITransferable transferableObject) {
+    public synchronized void sendMessageToAllClients(ITransferable transferableObject, ClientHandler excludedClient) {
         for (int i = 0; i < this.clients.size(); i++) {
             ClientHandler clientHandler = this.clients.get(i);
-            clientHandler.getClientSender().sendMessage(transferableObject);
+            if (clientHandler != excludedClient){
+                clientHandler.getClientSender().sendMessage(transferableObject);
+            }
+        }
+    }
+
+    public synchronized void send(ClientHandler client, ITransferable transferableObject) {
+        for (int i = 0; i < this.clients.size(); i++) {
+            ClientHandler clientHandler = this.clients.get(i);
+            if (clientHandler == client){
+                clientHandler.getClientSender().sendMessage(transferableObject);
+                break;
+            }
+
         }
     }
 
@@ -107,7 +134,7 @@ public class ServerDispatcher extends Thread implements IDisposable {
         try {
             while (!this.disposed) {
                 ITransferable object = this.getNextMessageFromQueue();
-                this.sendMessageToAllClients(object);
+                this.sendMessageToAllClients(object, null);
             }
         } catch (InterruptedException ie) {
             this.errorHandler.errorHasOccurred(new EventArgs<ITransferable>(this, TransferableObjectFactory.CreateServerMessage("ServerDispatcher thread interrupted, stopped its execution", MessageType.Error)));
@@ -164,6 +191,15 @@ public class ServerDispatcher extends Thread implements IDisposable {
         for (int i = 0; i < listeners.length; i = i+2) {
             if (listeners[i] == IClientConnectionListener.class) {
                 ((IClientConnectionListener) listeners[i+1]).onClientHasSetName(eventArgs);
+            }
+        }
+    }
+
+    public void clientHasSignedIn(EventArgs<ITransferable> eventArgs) {
+        Object[] listeners = this.listeners.getListenerList();
+        for (int i = 0; i < listeners.length; i = i+2) {
+            if (listeners[i] == IClientConnectionListener.class) {
+                ((IClientConnectionListener) listeners[i+1]).onClientHasSignedIn(eventArgs);
             }
         }
     }

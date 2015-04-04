@@ -6,6 +6,7 @@ import de.hsbremen.chat.network.ITransferable;
 import de.hsbremen.chat.network.MessageType;
 import de.hsbremen.chat.network.TransferableObjectFactory;
 import de.hsbremen.chat.network.transferableObjects.ClientInfo;
+import de.hsbremen.chat.network.transferableObjects.ClientInfoSendingReason;
 
 import java.io.IOException;
 import java.io.ObjectInputStream;
@@ -49,12 +50,21 @@ public class ClientListener extends Thread implements IDisposable {
                 switch (receivedObject.getType()) {
                     case ClientInfo:
                         ClientInfo info = (ClientInfo) receivedObject;
-                        if (clientHandler.getUsername() != info.getUsername()) {
-                            clientHandler.setUsername(info.getUsername());
-                            ITransferable serverMessage = TransferableObjectFactory.CreateServerMessage(clientHandler.getSocket().getInetAddress().getHostAddress() + ":" + clientHandler.getSocket().getPort() + " has set name to " + info.getUsername(), MessageType.Info);
-                            EventArgs<ITransferable> eventArgs = new EventArgs<ITransferable>(this, serverMessage);
-                            serverDispatcher.clientHasSetName(eventArgs);
-                            serverDispatcher.sendMessageToAllClients(TransferableObjectFactory.CreateClientInfo(clientHandler.getUsername(), clientHandler.getUsername() + " has connected"));
+                        switch (info.getReason()){
+                            case  Connect:
+                                if (clientHandler.getUsername() != info.getUsername()) {
+                                    clientHandler.setUsername(info.getUsername());
+                                    ITransferable serverMessage = TransferableObjectFactory.CreateServerMessage(clientHandler.getSocket().getInetAddress().getHostAddress() + ":" + clientHandler.getSocket().getPort() + " has set name to " + info.getUsername(), MessageType.Info);
+                                    EventArgs<ITransferable> eventArgs = new EventArgs<ITransferable>(this, serverMessage);
+                                    serverDispatcher.clientHasSetName(eventArgs);
+                                    // set user name
+                                    serverDispatcher.sendMessageToAllClients(TransferableObjectFactory.CreateServerMessage(clientHandler.getUsername() + " has connected", MessageType.Info), null);
+                                    serverDispatcher.sendMessageToAllClients(TransferableObjectFactory.CreateClientInfo(clientHandler.getUsername(), clientHandler.getSocket().getInetAddress().getHostAddress(), clientHandler.getSocket().getPort(), ClientInfoSendingReason.Connect), clientHandler);
+                                    // send names of all connected user to the connected user
+                                    serverDispatcher.send(clientHandler, TransferableObjectFactory.CreateServerInfo(serverDispatcher.getUsers()));
+                                    serverDispatcher.clientHasSignedIn(new EventArgs<ITransferable>(this, TransferableObjectFactory.CreateClientInfo(clientHandler.getUsername(), clientHandler.getSocket().getInetAddress().getHostAddress(), clientHandler.getSocket().getPort())));
+                                }
+                                break;
                         }
                         break;
                     default:
