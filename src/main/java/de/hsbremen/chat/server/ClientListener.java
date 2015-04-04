@@ -65,6 +65,8 @@ public class ClientListener extends Thread implements IDisposable {
                                     serverDispatcher.clientHasSignedIn(new EventArgs<ITransferable>(this, TransferableObjectFactory.CreateClientInfo(clientHandler.getUsername(), clientHandler.getSocket().getInetAddress().getHostAddress(), clientHandler.getSocket().getPort())));
                                 }
                                 break;
+                            case Disconnect:
+                                break;
                         }
                         break;
                     default:
