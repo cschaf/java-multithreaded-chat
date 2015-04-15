@@ -96,8 +96,8 @@ public class Server implements IDisposable {
         this.listeners.add(IServerListener.class, listener);
     }
 
-    public void removeServerListener(IErrorListener listener) {
-        this.errorHandler.removeErrorListener(listener);
+    public void removeServerListener(IServerListener listener) {
+        this.listeners.remove(IServerListener.class, listener);
     }
 
     public void addErrorListener(IErrorListener listener) {
@@ -105,7 +105,7 @@ public class Server implements IDisposable {
     }
 
     public void removeErrorListener(IErrorListener listener) {
-        this.listeners.remove(IErrorListener.class, listener);
+        this.errorHandler.removeErrorListener(listener);
     }
 
     private void printInfo(EventArgs<ITransferable> eventArgs) {

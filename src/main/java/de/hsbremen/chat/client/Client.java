@@ -1,11 +1,19 @@
 package de.hsbremen.chat.client;
 
+import de.hsbremen.chat.core.ErrorHandler;
 import de.hsbremen.chat.core.IDisposable;
+import de.hsbremen.chat.events.EventArgs;
+import de.hsbremen.chat.events.listeners.*;
+import de.hsbremen.chat.network.ITransferable;
+import de.hsbremen.chat.network.MessageType;
+import de.hsbremen.chat.network.TransferableObjectFactory;
 
+import javax.swing.event.EventListenerList;
 import java.io.IOException;
 import java.io.ObjectInputStream;
 import java.io.ObjectOutputStream;
 import java.net.Socket;
+import java.util.ArrayList;
 
 /**
  * Created by cschaf on 28.03.2015.
@@ -24,13 +32,37 @@ public class Client implements IDisposable {
     private Sender sender = null;
     private Listener listener = null;
     private String username = null;
+    private ErrorHandler errorHandler = null;
+    protected EventListenerList listeners = new EventListenerList();
+    private ArrayList<IServerObjectReceivedListener> tempServerObjectReceivedListeners;
 
     public Client(String serverIp, int serverPort, String username) {
         this.serverIp = serverIp;
         this.serverPort = serverPort;
         this.username = username;
+        this.errorHandler = new ErrorHandler();
+        this.tempServerObjectReceivedListeners = new ArrayList<IServerObjectReceivedListener>();
     }
 
+    public void addErrorListener(IErrorListener listener) {
+        this.errorHandler.addErrorListender(listener);
+    }
+
+    public void removeErrorListener(IErrorListener listener) {
+        this.errorHandler.removeErrorListener(listener);
+    }
+
+    public void addServerObjectReceivedListener(IServerObjectReceivedListener listener) {
+        if (this.listener == null) {
+            tempServerObjectReceivedListeners.add(listener);
+        } else {
+            this.listener.addServerObjectReceivedListener(listener);
+        }
+    }
+
+    public void removeServerObjectReceivedListener(IServerObjectReceivedListener listener) {
+        this.listener.removeServerObjectReceivedListener(listener);
+    }
     /**
      * Connect to Server
      */
@@ -39,9 +71,8 @@ public class Client implements IDisposable {
             socket = new Socket(serverIp, serverPort);
             in = new ObjectInputStream(socket.getInputStream());
             out = new ObjectOutputStream(socket.getOutputStream());
-            System.out.println("Connected to server " + serverIp + ":" + serverPort);
         } catch (IOException e) {
-            System.err.println("Can not establish connection to " + serverIp + ":" + serverPort);
+            errorHandler.errorHasOccurred(new EventArgs<ITransferable>(this, TransferableObjectFactory.CreateServerMessage("Can not establish connection to " + serverIp + ":" + serverPort, MessageType.Error)));
             this.dispose();
             System.exit(-1);
         }
@@ -51,7 +82,11 @@ public class Client implements IDisposable {
         this.sender.setDaemon(true);
         this.sender.start();
 
-        this.listener = new Listener(in);
+        this.listener = new Listener(in, this.errorHandler);
+        for (IServerObjectReceivedListener tempListener : this.tempServerObjectReceivedListeners) {
+            this.listener.addServerObjectReceivedListener(tempListener);
+        }
+        this.tempServerObjectReceivedListeners.clear();
         this.listener.start();
     }
 
@@ -78,7 +113,7 @@ public class Client implements IDisposable {
                 this.socket.close();
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            errorHandler.errorHasOccurred(new EventArgs<ITransferable>(this, TransferableObjectFactory.CreateServerMessage("Could not dispose clientobject", MessageType.Error)));
         }
     }
 }
