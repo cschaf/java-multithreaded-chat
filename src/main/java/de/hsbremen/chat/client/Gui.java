@@ -43,7 +43,7 @@ public class Gui {
     }
 
     private void _initComponents(){
-        pnlMain = new JPanel(new MigLayout("debug"));
+        pnlMain = new JPanel(new MigLayout());
         lblUsername = new JLabel("Username:");
         tbxUsername = new JTextField("");
         btnConnect = new JButton("Connect");
