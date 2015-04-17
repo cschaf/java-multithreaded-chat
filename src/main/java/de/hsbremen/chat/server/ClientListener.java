@@ -57,8 +57,7 @@ public class ClientListener extends Thread implements IDisposable {
                                     ITransferable serverMessage = TransferableObjectFactory.CreateServerMessage(clientHandler.getSocket().getInetAddress().getHostAddress() + ":" + clientHandler.getSocket().getPort() + " has set name to " + info.getUsername(), MessageType.Info);
                                     EventArgs<ITransferable> eventArgs = new EventArgs<ITransferable>(this, serverMessage);
                                     serverDispatcher.clientHasSetName(eventArgs);
-                                    // set user name
-                                    serverDispatcher.sendMessageToAllClients(TransferableObjectFactory.CreateServerMessage(clientHandler.getUsername() + " has connected", MessageType.Info), null);
+                                    serverDispatcher.send(clientHandler, TransferableObjectFactory.CreateServerMessage("You are now connected to the server", MessageType.Info));
                                     serverDispatcher.sendMessageToAllClients(TransferableObjectFactory.CreateClientInfo(clientHandler.getUsername(), clientHandler.getSocket().getInetAddress().getHostAddress(), clientHandler.getSocket().getPort(), ClientInfoSendingReason.Connect), clientHandler);
                                     // send names of all connected user to the connected user
                                     serverDispatcher.send(clientHandler, TransferableObjectFactory.CreateServerInfo(serverDispatcher.getUsers()));
@@ -83,7 +82,6 @@ public class ClientListener extends Thread implements IDisposable {
         this.serverDispatcher.deleteClient(this.clientHandler);
     }
 
-    @Override
     public void dispose() {
         try {
             this.disposed = true;
