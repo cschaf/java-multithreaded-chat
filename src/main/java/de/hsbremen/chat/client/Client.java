@@ -31,7 +31,7 @@ public class Client implements IDisposable {
     private Socket socket = null;
     private Sender sender = null;
     private Listener listener = null;
-    private String username = null;
+    private String username = "Guest";
     private ErrorHandler errorHandler = null;
     protected EventListenerList listeners = new EventListenerList();
     private ArrayList<IServerObjectReceivedListener> tempServerObjectReceivedListeners;
@@ -40,6 +40,10 @@ public class Client implements IDisposable {
         this.serverIp = serverIp;
         this.serverPort = serverPort;
         this.username = username;
+        this.errorHandler = new ErrorHandler();
+        this.tempServerObjectReceivedListeners = new ArrayList<IServerObjectReceivedListener>();
+    }
+    public Client() {
         this.errorHandler = new ErrorHandler();
         this.tempServerObjectReceivedListeners = new ArrayList<IServerObjectReceivedListener>();
     }
@@ -66,20 +70,19 @@ public class Client implements IDisposable {
     /**
      * Connect to Server
      */
-    public void connect() {
+    public void connect() throws Exception {
         try {
             socket = new Socket(serverIp, serverPort);
             in = new ObjectInputStream(socket.getInputStream());
             out = new ObjectOutputStream(socket.getOutputStream());
-        } catch (IOException e) {
+        } catch (Exception e) {
             errorHandler.errorHasOccurred(new EventArgs<ITransferable>(this, TransferableObjectFactory.CreateServerMessage("Can not establish connection to " + serverIp + ":" + serverPort, MessageType.Error)));
-            this.dispose();
-            System.exit(-1);
+            throw new Exception("Can not establish connection to " + serverIp + ":" + serverPort);
         }
 
         // Create and start Sender thread
-        this.sender = new Sender(socket, out, this.username);
-        this.sender.setDaemon(true);
+        this.sender = new Sender(socket, out);
+        this.sender.sendLogin(this.username);
         this.sender.start();
 
         this.listener = new Listener(in, this.errorHandler);
@@ -92,6 +95,10 @@ public class Client implements IDisposable {
 
     public void disconnect() {
         this.dispose();
+    }
+
+    public void sendMessage(String message){
+        this.sender.sendMessage(this.username, message);
     }
 
     @Override
@@ -115,5 +122,17 @@ public class Client implements IDisposable {
         } catch (IOException e) {
             errorHandler.errorHasOccurred(new EventArgs<ITransferable>(this, TransferableObjectFactory.CreateServerMessage("Could not dispose clientobject", MessageType.Error)));
         }
+    }
+
+    public void setIp(String ip) {
+        this.serverIp = ip;
+    }
+
+    public void setPort(int port) {
+        this.serverPort = port;
+    }
+
+    public void setUsername(String username) {
+        this.username = username;
     }
 }

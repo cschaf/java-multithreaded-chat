@@ -30,6 +30,7 @@ public class Listener extends Thread implements IDisposable {
         this.errorHandler = errorHandler;
         this.disposed = false;
         this.in = in;
+        this.setName("Client-Listenerthread");
     }
 
     public void run(){

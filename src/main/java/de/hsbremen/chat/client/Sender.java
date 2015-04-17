@@ -19,13 +19,12 @@ public class Sender extends Thread implements IDisposable {
     private ObjectOutputStream out;
     private Socket socket;
     private boolean disposed;
-    private String username;
 
-    public Sender(Socket socket, ObjectOutputStream out, String username) {
-        this.username = username;
+    public Sender(Socket socket, ObjectOutputStream out) {
         this.disposed = false;
         this.socket = socket;
         this.out = out;
+        this.setName("Client-Senderthread");
     }
 
     /**
@@ -34,21 +33,32 @@ public class Sender extends Thread implements IDisposable {
      */
     public void run() {
         try {
-            BufferedReader in = new BufferedReader(new InputStreamReader(System.in));
-            this.out.writeObject(TransferableObjectFactory.CreateClientInfo(this.username,socket.getInetAddress().getHostAddress(), socket.getLocalPort(), ClientInfoSendingReason.Connect));
-            this.out.flush();
             while (!isInterrupted() && !this.disposed) {
-                String message = in.readLine();
-                if(message != null){
-                    ITransferable sender = TransferableObjectFactory.CreateClientInfo(this.username, socket.getInetAddress().getHostAddress(), socket.getLocalPort());
-                    this.out.writeObject(TransferableObjectFactory.CreateMessage(message, sender));
-                    this.out.flush();
-                }
+                Thread.sleep(1000);
             }
-        } catch (IOException ioe) {
-            this.dispose();
-            // Communication is broken
+        } catch (InterruptedException e) {
+            e.printStackTrace();
         }
+    }
+
+    public void sendMessage(String username, String message){
+        ITransferable sender = TransferableObjectFactory.CreateClientInfo(username, socket.getInetAddress().getHostAddress(), socket.getLocalPort());
+        try {
+            this.out.writeObject(TransferableObjectFactory.CreateMessage(message, sender));
+            this.out.flush();
+        } catch (IOException e) {
+            this.dispose();
+        }
+
+    }
+    public void sendLogin(String username) {
+        try {
+            this.out.writeObject(TransferableObjectFactory.CreateClientInfo(username,socket.getInetAddress().getHostAddress(), socket.getLocalPort(), ClientInfoSendingReason.Connect));
+            this.out.flush();
+        } catch (IOException e) {
+            this.dispose();
+        }
+
     }
 
     @Override

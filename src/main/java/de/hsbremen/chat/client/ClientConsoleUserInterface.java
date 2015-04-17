@@ -63,6 +63,10 @@ public class ClientConsoleUserInterface{
                 System.out.println("--- end ---");
             }
         });
-        client.connect();
+        try {
+            client.connect();
+        } catch (Exception e) {
+            System.out.println(e.getMessage());
+        }
     }
 }
