@@ -8,7 +8,7 @@ import java.awt.*;
 /**
  * Created by cschaf on 31.03.2015.
  */
-public class Gui {
+public class Gui extends JFrame{
     private JLabel lblPort;
     private JTextField tbxPort;
     private JLabel lblIp;
@@ -19,12 +19,20 @@ public class Gui {
     private JButton btnSend;
     private JScrollPane scrollPanelUsers;
     private JList listUsers;
-    private JPanel pnlMain;
+    public JPanel pnlMain;
     private JTextArea traMessages;
     private JScrollPane scrollPanelMessages;
     public Gui(){
+        super("Server Gui");
         this._initComponents();
         this._addComponents();
+        setContentPane(pnlMain);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        Dimension d= new Dimension(637, 500);
+        setSize(d);
+        setPreferredSize(d);
+        pack();
+        setVisible(true);
     }
 
     private void _addComponents(){
@@ -59,16 +67,5 @@ public class Gui {
         scrollPanelUsers = new JScrollPane(listUsers);
         tbxMessage = new JTextField("");
         btnSend = new JButton("Send");
-    }
-
-    public static void main(String[] args) {
-        JFrame frame = new JFrame("Server Gui");
-        frame.setContentPane(new Gui().pnlMain);
-        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        Dimension d= new Dimension(637, 500);
-        frame.setSize(d);
-        frame.setPreferredSize(d);
-        frame.pack();
-        frame.setVisible(true);
     }
 }
