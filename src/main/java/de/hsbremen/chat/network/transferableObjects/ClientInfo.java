@@ -35,7 +35,6 @@ public class ClientInfo extends TransferableObject {
         return this.message;
     }
 
-    @Override
     public TransferableType getType() {
         return TransferableType.ClientInfo;
     }

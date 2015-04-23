@@ -1,5 +1,6 @@
 package de.hsbremen.chat.network;
 
+import de.hsbremen.chat.core.ClientJListItem;
 import de.hsbremen.chat.network.transferableObjects.*;
 
 import java.util.ArrayList;
@@ -23,7 +24,7 @@ public class TransferableObjectFactory {
     public static ITransferable CreateServerMessage(String message, MessageType messageType) {
         return new ServerMessage(message, messageType);
     }
-    public static ITransferable CreateServerInfo(ArrayList<String> users) {
+    public static ITransferable CreateServerInfo(ArrayList<ClientJListItem> users) {
         return new ServerInfo(users);
     }
 }

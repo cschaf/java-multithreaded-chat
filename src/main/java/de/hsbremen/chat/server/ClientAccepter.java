@@ -46,7 +46,6 @@ public class ClientAccepter extends Thread implements IDisposable{
         }
     }
 
-    @Override
     public void dispose() {
         this.disposed = true;
     }

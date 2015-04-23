@@ -21,7 +21,6 @@ public class ServerMessage extends TransferableObject {
         this.type = type;
     }
 
-    @Override
     public TransferableType getType() {
         return TransferableType.ServerMessage;
     }

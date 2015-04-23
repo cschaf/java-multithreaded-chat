@@ -91,7 +91,6 @@ public class ClientSender extends Thread implements IDisposable {
         this.serverDispatcher.deleteClient(this.clientHandler);
     }
 
-    @Override
     public void dispose() {
         this.disposed = true;
         try {

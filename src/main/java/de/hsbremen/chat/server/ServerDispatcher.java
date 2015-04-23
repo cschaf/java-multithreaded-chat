@@ -1,5 +1,6 @@
 package de.hsbremen.chat.server;
 
+import de.hsbremen.chat.core.ClientJListItem;
 import de.hsbremen.chat.core.ErrorHandler;
 import de.hsbremen.chat.core.IDisposable;
 import de.hsbremen.chat.events.EventArgs;
@@ -38,10 +39,11 @@ public class ServerDispatcher extends Thread implements IDisposable {
         this.messageQueue = new Vector<ITransferable>();
     }
 
-    public ArrayList<String> getUsers(){
-        ArrayList<String> result = new ArrayList<String>();
+    public ArrayList<ClientJListItem> getUsers(){
+        ArrayList<ClientJListItem> result = new ArrayList<ClientJListItem>();
         for(ClientHandler handler : this.clients){
-            result.add(handler.getUsername() + "(" + handler.getSocket().getPort() + ")");
+            ClientJListItem item = new ClientJListItem(handler.getSocket().getInetAddress().getHostAddress(), handler.getSocket().getPort(), handler.getUsername(), null);
+            result.add(item);
         }
 
         return result;
@@ -204,7 +206,6 @@ public class ServerDispatcher extends Thread implements IDisposable {
         }
     }
 
-    @Override
     public void dispose() {
         this.disposed = true;
         for (ClientHandler clients : this.clients) {

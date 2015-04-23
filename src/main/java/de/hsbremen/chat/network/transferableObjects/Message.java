@@ -19,7 +19,6 @@ public class Message extends TransferableObject {
         return message;
     }
 
-    @Override
     public TransferableType getType() {
         return TransferableType.Messgage;
     }

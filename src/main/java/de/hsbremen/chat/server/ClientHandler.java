@@ -67,7 +67,6 @@ public class ClientHandler implements IDisposable {
         this.clientListener = listener;
     }
 
-    @Override
     public void dispose() {
         try {
             this.socket.close();

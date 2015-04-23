@@ -117,7 +117,6 @@ public class Server implements IDisposable {
         }
     }
 
-    @Override
     public void dispose() {
         try {
             if (this.clientAccepter != null) {

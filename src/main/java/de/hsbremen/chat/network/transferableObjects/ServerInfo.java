@@ -1,5 +1,6 @@
 package de.hsbremen.chat.network.transferableObjects;
 
+import de.hsbremen.chat.core.ClientJListItem;
 import de.hsbremen.chat.network.ITransferable;
 import de.hsbremen.chat.network.TransferableType;
 
@@ -10,18 +11,17 @@ import java.util.ArrayList;
  */
 public class ServerInfo extends TransferableObject {
 
-    private ArrayList<String> users;
+    private ArrayList<ClientJListItem> users;
 
-    public ServerInfo(ArrayList<String> users) {
+    public ServerInfo(ArrayList<ClientJListItem> users) {
         this.users = users;
     }
 
-    @Override
     public TransferableType getType() {
         return TransferableType.ServerInfo;
     }
 
-    public ArrayList<String> getUsers() {
+    public ArrayList<ClientJListItem> getUsers() {
         return users;
     }
 }

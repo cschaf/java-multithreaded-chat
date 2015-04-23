@@ -1,5 +1,6 @@
 package de.hsbremen.chat.client;
 
+import de.hsbremen.chat.core.ClientJListItem;
 import de.hsbremen.chat.events.EventArgs;
 import de.hsbremen.chat.events.listeners.IServerObjectReceivedListener;
 import de.hsbremen.chat.network.ITransferable;
@@ -15,12 +16,12 @@ import javax.swing.*;
  */
 public class ServerObjectListener implements IServerObjectReceivedListener{
     private Gui gui;
-    private DefaultListModel<String>  model;
+    private DefaultListModel<ClientJListItem>  model;
 
     public ServerObjectListener(Gui gui){
 
         this.gui = gui;
-        this.model = new DefaultListModel<String>();
+        this.model = new DefaultListModel<ClientJListItem>();
     }
 
     public void onObjectReceived(EventArgs<ITransferable> eventArgs) {
@@ -32,13 +33,20 @@ public class ServerObjectListener implements IServerObjectReceivedListener{
     }
 
     public void onClientInfoObjectReceived(EventArgs<ClientInfo> eventArgs) {
+        ClientJListItem item = new ClientJListItem(eventArgs.getItem().getIp(), eventArgs.getItem().getPort(), eventArgs.getItem().getUsername(), null);
         switch (eventArgs.getItem().getReason()){
             case Connect:
-                this.model.addElement(eventArgs.getItem().getUsername() + "(" + eventArgs.getItem().getPort() + ")");
+                this.model.addElement(item);
                 gui.traMessages.append(eventArgs.getItem().getUsername() + "(" + eventArgs.getItem().getPort() + ") has joined" + "\n");
                 break;
             case Disconnect:
-                this.model.removeElement(eventArgs.getItem().getUsername() + "(" + eventArgs.getItem().getPort() + ")");
+                for (int i =0; i < this.model.getSize(); i++){
+                    String ip = this.model.getElementAt(i).getIp();
+                    int port = this.model.getElementAt(i).getPort();
+                    if(ip.equals(item.getIp()) && port == item.getPort()){
+                        this.model.remove(i);
+                    }
+                }
                 gui.traMessages.append(eventArgs.getItem().getUsername() + "(" + eventArgs.getItem().getPort() + ") has left \n");
                 break;
         }
@@ -50,7 +58,7 @@ public class ServerObjectListener implements IServerObjectReceivedListener{
 
     public void onServerInfoObjectReceived(EventArgs<ServerInfo> eventArgs) {
         this.model.clear();
-        for (String user : eventArgs.getItem().getUsers()){
+        for (ClientJListItem user : eventArgs.getItem().getUsers()){
             model.addElement(user);
         }
         gui.listUsers.setModel(model);

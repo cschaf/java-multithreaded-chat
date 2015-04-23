@@ -101,7 +101,6 @@ public class Client implements IDisposable {
         this.sender.sendMessage(this.username, message);
     }
 
-    @Override
     public void dispose() {
         try {
             if (this.listener != null) {
